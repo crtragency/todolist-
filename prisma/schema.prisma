@@ -1,0 +1,178 @@
+// Prisma schema for the "Everything" To-Do app.
+// Datasource is PostgreSQL. On Vercel, point DATABASE_URL at Vercel Postgres / Neon.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Pooled connection (Supabase transaction pooler, port 6543) used at runtime.
+  url       = env("DATABASE_URL")
+  // Direct connection (port 5432) used for migrations, which can't run through pgbouncer.
+  directUrl = env("DIRECT_URL")
+}
+
+enum Priority {
+  P1
+  P2
+  P3
+  P4
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  avatar    String?
+  // Free-form JSON settings blob (theme, weekStart, startPage, ...).
+  settings  Json     @default("{}")
+  karma     Int      @default(0)
+  streak    Int      @default(0)
+  createdAt DateTime @default(now())
+
+  projects Project[]
+  tasks    Task[]
+  labels   Label[]
+  filters  Filter[]
+  sections Section[]
+  comments Comment[]
+
+  @@index([email])
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String   @default("#808080")
+  icon      String   @default("#")
+  isInbox   Boolean  @default(false)
+  favorite  Boolean  @default(false)
+  archived  Boolean  @default(false)
+  viewType  String   @default("list") // list | board
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sections Section[]
+  tasks    Task[]
+
+  @@index([userId])
+}
+
+model Section {
+  id        String   @id @default(cuid())
+  userId    String
+  projectId String
+  name      String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+
+  @@index([projectId])
+}
+
+model Task {
+  id             String    @id @default(cuid())
+  userId         String
+  projectId      String
+  sectionId      String?
+  parentTaskId   String?
+  title          String
+  description    String    @default("")
+  dueDate        DateTime? // scheduled "do" date (date-only semantics)
+  dueTime        String? // "HH:mm" if a specific time was set
+  deadline       DateTime? // hard deadline, distinct from scheduled date
+  priority       Priority  @default(P4)
+  recurrence     String? // human/RRULE-ish rule string, e.g. "every day"
+  estimatedMin   Int?
+  completed      Boolean   @default(false)
+  completedAt    DateTime?
+  order          Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  section    Section?   @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  parentTask Task?      @relation("Subtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subtasks   Task[]     @relation("Subtasks")
+  labels     TaskLabel[]
+  comments   Comment[]
+  reminders  Reminder[]
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([parentTaskId])
+  @@index([dueDate])
+}
+
+model Label {
+  id     String @id @default(cuid())
+  userId String
+  name   String
+  color  String @default("#808080")
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks TaskLabel[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+// Explicit join table so we can extend it later if needed.
+model TaskLabel {
+  taskId  String
+  labelId String
+
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
+  @@index([labelId])
+}
+
+model Filter {
+  id       String  @id @default(cuid())
+  userId   String
+  name     String
+  query    String
+  color    String  @default("#808080")
+  favorite Boolean @default(false)
+  order    Int     @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Reminder {
+  id        String   @id @default(cuid())
+  taskId    String
+  type      String   @default("time") // time | location
+  triggerAt DateTime?
+  place     String?
+  persistent Boolean @default(false)
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  taskId    String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
