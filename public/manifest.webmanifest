@@ -1,0 +1,13 @@
+{
+  "name": "Everything — To-Do",
+  "short_name": "Everything",
+  "description": "A fast, beautiful, offline-capable to-do list app.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#181a1e",
+  "theme_color": "#e03131",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

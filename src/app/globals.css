@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light theme (default). Values are space-separated RGB channels for Tailwind's <alpha-value>. */
+  --bg: 247 248 250;
+  --surface: 255 255 255;
+  --surface-2: 242 244 247;
+  --border: 226 229 233;
+  --fg: 27 30 34;
+  --muted: 122 128 138;
+  --accent: 219 68 55;
+  --accent-fg: 255 255 255;
+}
+
+:root.dark {
+  --bg: 24 26 30;
+  --surface: 30 33 38;
+  --surface-2: 38 42 48;
+  --border: 51 56 63;
+  --fg: 233 236 240;
+  --muted: 148 155 165;
+  --accent: 232 82 70;
+  --accent-fg: 255 255 255;
+}
+
+/* Additional colour themes (applied via data-theme on <html>). */
+:root[data-theme='blue'] { --accent: 33 118 209; }
+:root[data-theme='violet'] { --accent: 124 77 255; }
+:root[data-theme='green'] { --accent: 22 163 74; }
+:root[data-theme='pink'] { --accent: 219 39 119; }
+:root[data-theme='amber'] { --accent: 217 119 6; }
+:root[data-theme='teal'] { --accent: 13 148 136; }
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--fg));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Thin, theme-aware scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--border)) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgb(var(--border));
+  border-radius: 4px;
+}
+
+/* Focus ring for accessibility. */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-accent-fg hover:opacity-90;
+  }
+  .btn-ghost {
+    @apply btn text-fg hover:bg-surface-2;
+  }
+  .input {
+    @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none;
+  }
+  .card {
+    @apply rounded-xl border border-border bg-surface;
+  }
+}
+
+/* Strike-through animation for completed tasks. */
+.task-complete-checkbox {
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
