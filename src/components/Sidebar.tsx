@@ -7,6 +7,7 @@ import { useTheme } from '@/lib/theme';
 import ProjectDialog from './ProjectDialog';
 import ThemeMenu from './ThemeMenu';
 import Pomodoro from './Pomodoro';
+import Settings from './Settings';
 
 function NavItem({
   icon,
@@ -55,6 +56,7 @@ export default function Sidebar({
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showPomodoro, setShowPomodoro] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const inbox = projects.find((p) => p.isInbox);
   const userProjects = projects.filter((p) => !p.isInbox);
@@ -79,15 +81,22 @@ export default function Sidebar({
       >
         {/* User header */}
         <div className="flex items-center gap-2.5 px-4 py-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-fg">
-            {(user?.name?.[0] ?? 'U').toUpperCase()}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold">{user?.name ?? 'You'}</div>
-            <div className="truncate text-xs text-muted">
-              ⚡ {user?.karma ?? 0} karma
+          <button
+            className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg p-1 text-left hover:bg-surface-2"
+            onClick={() => setShowSettings(true)}
+            title="Account settings"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-fg">
+              {(user?.name?.[0] ?? 'U').toUpperCase()}
             </div>
-          </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold">{user?.name ?? 'You'}</div>
+              <div className="truncate text-xs text-muted">⚡ {user?.karma ?? 0} karma</div>
+            </div>
+          </button>
+          <button className="btn-ghost p-1.5" onClick={() => setShowSettings(true)} title="Settings">
+            <Icon.Settings />
+          </button>
           <button className="btn-ghost p-1.5" onClick={onOpenPalette} title="Command palette (⌘K)">
             <Icon.Command />
           </button>
@@ -270,6 +279,7 @@ export default function Sidebar({
       {showProjectDialog && <ProjectDialog onClose={() => setShowProjectDialog(false)} />}
       {showThemeMenu && <ThemeMenu onClose={() => setShowThemeMenu(false)} />}
       {showPomodoro && <Pomodoro onClose={() => setShowPomodoro(false)} />}
+      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
     </>
   );
 }
