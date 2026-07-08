@@ -7,7 +7,10 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Pooled connection (Supabase transaction pooler, port 6543) used at runtime.
+  url       = env("DATABASE_URL")
+  // Direct connection (port 5432) used for migrations, which can't run through pgbouncer.
+  directUrl = env("DIRECT_URL")
 }
 
 enum Priority {

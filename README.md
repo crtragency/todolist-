@@ -78,6 +78,7 @@ cp .env.example .env
 ```
 ```env
 DATABASE_URL="postgresql://user:password@localhost:5432/todolist?schema=public"
+DIRECT_URL="postgresql://user:password@localhost:5432/todolist?schema=public"  # same as DATABASE_URL for local dev
 JWT_SECRET="run: openssl rand -hex 32"
 ```
 
@@ -102,14 +103,24 @@ Or click **“Try the demo account”** on the login screen.
 
 ---
 
-## ☁️ Deploy to Vercel
+## ☁️ Deploy to Vercel (with Supabase Postgres)
 
-1. Push this repo to GitHub and **Import** it in Vercel.
-2. Add a Postgres database (Vercel Postgres or Neon) and set the env vars in **Project → Settings → Environment Variables**:
-   - `DATABASE_URL` — your Postgres connection string
-   - `JWT_SECRET` — a long random string
-3. Deploy. `vercel.json` runs `prisma generate && prisma migrate deploy && next build`, so the schema is applied automatically on each deploy.
-4. (Optional) Run the seed once from your machine against the production DB: `DATABASE_URL=... npm run db:seed`.
+1. **Create a Supabase project** at [supabase.com](https://supabase.com). Set a database password when prompted.
+2. In Supabase, open **Project Settings → Database → Connection string** and copy two strings:
+   - **Transaction pooler** (port `6543`) → this is your `DATABASE_URL`. Append `?pgbouncer=true&connection_limit=1`.
+   - **Direct connection / Session pooler** (port `5432`) → this is your `DIRECT_URL`.
+3. Push this repo to GitHub and **Import** it in Vercel.
+4. In **Vercel → Project → Settings → Environment Variables**, add (for Production **and** Preview):
+   - `DATABASE_URL` — the pooler string from step 2 (…`:6543/postgres?pgbouncer=true&connection_limit=1`)
+   - `DIRECT_URL` — the direct string from step 2 (…`:5432/postgres`)
+   - `JWT_SECRET` — a long random string (`openssl rand -hex 32`)
+5. **Deploy.** `vercel.json` runs `prisma generate && prisma migrate deploy && next build`; migrations run over `DIRECT_URL`, so your tables are created automatically on the first deploy.
+6. (Optional) Load demo data against Supabase from your machine:
+   ```bash
+   DATABASE_URL="<direct 5432 url>" DIRECT_URL="<direct 5432 url>" npm run db:seed
+   ```
+
+> Why two URLs? Serverless functions open many short-lived connections, so the app talks to Postgres through Supabase's **pooler** (`DATABASE_URL`). Prisma migrations can't run through the pooler, so they use the **direct** connection (`DIRECT_URL`).
 
 ---
 
