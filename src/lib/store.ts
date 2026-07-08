@@ -58,6 +58,9 @@ interface StoreState {
   bulkDelete: () => Promise<void>;
   bulkMove: (projectId: string) => Promise<void>;
 
+  updateProfile: (name: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+
   pushToast: (message: string, action?: Toast['action']) => void;
   dismissToast: (id: string) => void;
   logout: () => Promise<void>;
@@ -316,6 +319,17 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+
+  updateProfile: async (name) => {
+    await api.patch('/api/auth/me', { name });
+    set((s) => (s.user ? { user: { ...s.user, name } } : {}));
+    get().pushToast('Profile updated');
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    await api.patch('/api/auth/password', { currentPassword, newPassword });
+    get().pushToast('Password changed');
+  },
 
   logout: async () => {
     await api.post('/api/auth/logout', {});
